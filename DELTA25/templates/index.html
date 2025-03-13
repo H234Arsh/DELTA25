@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WarCast AI</title>
+  
+  <!-- Favicon Link: references warcast.png in the static folder -->
+  <link
+    rel="icon"
+    type="image/png"
+    href="{{ url_for('static', filename='warcast.png') }}"
+  />
+
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --secondary-color: #1e293b;
+      --accent-color: #4f46e5;
+      --text-color: #f8fafc;
+      --danger-color: #dc2626;
+      --success-color: #10b981;
+    }
+
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--primary-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h1 {
+      font-size: 4rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      font-weight: 800;
+      background: linear-gradient(to right, #4f46e5, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 30px rgba(79, 70, 229, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    /* Logo next to heading */
+    .logo-img {
+      height: 60px;
+      width: auto;
+      vertical-align: middle;
+    }
+
+    .subtitle {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 3rem;
+      opacity: 0.8;
+    }
+
+    .btn {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      background-color: #4338ca;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-home {
+      background-color: var(--secondary-color);
+      margin-top: 1rem;
+    }
+
+    .btn-home:hover {
+      background-color: #334155;
+      box-shadow: 0 10px 25px rgba(30, 41, 59, 0.4);
+    }
+
+    /* Checkbox container */
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .checkbox-container input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Section containers */
+    #upload-container,
+    #processing-container,
+    #voice-selection-container,
+    #audio-player-container,
+    #background-music-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      min-height: 300px;
+      width: 100%;
+      max-width: 600px;
+      transition: all 0.3s ease;
+    }
+
+    /* Initially show upload container */
+    #upload-container {
+      display: flex;
+    }
+
+    /* Upload area styles */
+    .upload-area {
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 1rem;
+      padding: 3rem;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .upload-area:hover {
+      border-color: var(--accent-color);
+      background-color: rgba(79, 70, 229, 0.1);
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    /* Frequency Visualizer Styles */
+    #frequency-visualizer {
+      display: none;
+      align-items: flex-end;
+      gap: 5px;
+      height: 60px;
+      width: 100%;
+      max-width: 500px;
+    }
+    #frequency-visualizer .bar {
+      width: 10px;
+      background: linear-gradient(to top, #4f46e5, #8b5cf6);
+      animation: pulse 1s infinite ease-in-out;
+    }
+    #frequency-visualizer .bar:nth-child(1) { animation-delay: 0s; }
+    #frequency-visualizer .bar:nth-child(2) { animation-delay: 0.1s; }
+    #frequency-visualizer .bar:nth-child(3) { animation-delay: 0.2s; }
+    #frequency-visualizer .bar:nth-child(4) { animation-delay: 0.3s; }
+    #frequency-visualizer .bar:nth-child(5) { animation-delay: 0.4s; }
+    #frequency-visualizer .bar:nth-child(6) { animation-delay: 0.5s; }
+    #frequency-visualizer .bar:nth-child(7) { animation-delay: 0.6s; }
+    #frequency-visualizer .bar:nth-child(8) { animation-delay: 0.7s; }
+    #frequency-visualizer .bar:nth-child(9) { animation-delay: 0.8s; }
+    #frequency-visualizer .bar:nth-child(10) { animation-delay: 0.9s; }
+    @keyframes pulse {
+      0% { height: 20px; }
+      50% { height: 60px; }
+      100% { height: 20px; }
+    }
+
+    /* Select input styles */
+    select {
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      border: none;
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 0.5rem;
+      width: 100%;
+      max-width: 400px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f8fafc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.5em;
+    }
+
+    select:focus {
+      outline: 2px solid var(--accent-color);
+    }
+
+    /* Audio player styles */
+    .audio-player {
+      width: 100%;
+      max-width: 400px;
+      background-color: var(--secondary-color);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .audio-btn {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .audio-btn:hover {
+      background-color: #4338ca;
+      transform: scale(1.1);
+    }
+
+    .audio-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Status and feedback messages */
+    .status-message {
+      text-align: center;
+      margin: 1rem 0;
+      font-size: 1.1rem;
+    }
+
+    .error-message,
+    .success-message {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin: 1rem 0;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .error-message {
+      color: var(--danger-color);
+      background-color: rgba(220, 38, 38, 0.1);
+    }
+
+    .success-message {
+      color: var(--success-color);
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+
+    .image-preview {
+      max-width: 100%;
+      max-height: 300px;
+      margin: 1rem 0;
+      border-radius: 0.5rem;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Extracted text container */
+    #extracted-text-container {
+      margin-top: 20px;
+      padding: 10px;
+      background: #f9f9f9;
+      color: #333;
+      border-radius: 5px;
+      width: 100%;
+      max-width: 500px;
+      text-align: left;
+    }
+    #extracted-text-container h3 {
+      margin-bottom: 10px;
+      color: var(--primary-color);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      background-color: var(--secondary-color);
+      margin-top: 2rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 3rem;
+      }
+      .subtitle {
+        font-size: 1.2rem;
+      }
+      .container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <noscript>
+    <p style="text-align:center; padding:1rem; background-color: var(--danger-color); color: #fff;">
+      This application requires JavaScript to run properly. Please enable JavaScript in your browser.
+    </p>
+  </noscript>
+
+  <div class="container">
+    <!-- Upload Section -->
+    <section id="upload-container" role="region" aria-labelledby="upload-heading">
+      <!-- 
+           Logo beside WarCast AI title:
+           - The <img> tag references warcast.png from your static folder.
+           - The heading is flex-aligned (thanks to the CSS above).
+      -->
+      <h1 id="upload-heading">
+        <img 
+          src="{{ url_for('static', filename='warcast.png') }}" 
+          alt="WarCast AI Logo" 
+          class="logo-img"
+        />
+        WarCast AI
+      </h1>
+      <p class="subtitle">
+        Transform news articles into military-style audio briefings
+      </p>
+      <div class="upload-area" id="upload-area" tabindex="0" aria-label="Upload News Article Image">
+        <div class="upload-icon" aria-hidden="true">📄</div>
+        <h3>Upload News Article Image</h3>
+        <p>Click or drag and drop your image here</p>
+        <input type="file" id="file-input" class="file-input" accept="image/*" aria-label="Select image file" />
+      </div>
+      <div id="error-container" aria-live="polite"></div>
+    </section>
+
+    <!-- Processing Section -->
+    <section id="processing-container" role="region" aria-labelledby="processing-heading">
+      <h2 id="processing-heading">Processing Image</h2>
+      <div class="status-message" id="processing-status">
+        Enhancing image quality...
+      </div>
+      <!-- Frequency Visualizer -->
+      <div id="frequency-visualizer" aria-hidden="true">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+      <img id="image-preview" class="image-preview" alt="Preview of uploaded image" style="display: none;" />
+    </section>
+
+    <!-- Voice Selection Section -->
+    <section id="voice-selection-container" role="region" aria-labelledby="voice-selection-heading">
+      <h2 id="voice-selection-heading">Select Voice</h2>
+      <p>Choose a voice for your military briefing</p>
+      <select id="voice-select" aria-label="Voice selection">
+        <option value="Matthew">Matthew (Male, Authoritative)</option>
+        <option value="Joanna">Joanna (Female, Professional)</option>
+        <option value="Gregory">Gregory (Male, Commanding)</option>
+        <option value="Ruth">Ruth (Female, Assertive)</option>
+        <option value="Stephen">Stephen (Male, Serious)</option>
+        <option value="Kevin">Kevin (Male, Enthusiastic)</option>
+      </select>
+      <div class="checkbox-container">
+        <input type="checkbox" id="bg-music-checkbox" checked />
+        <label for="bg-music-checkbox">Include Background Music</label>
+      </div>
+      <button id="generate-audio-btn" class="btn" type="button">Generate Audio</button>
+    </section>
+
+    <!-- Audio Player Section -->
+    <section id="audio-player-container" role="region" aria-labelledby="audio-player-heading">
+      <h2 id="audio-player-heading">Your Military Briefing</h2>
+      <div class="status-message" id="audio-status">
+        Audio generated successfully!
+      </div>
+      <div class="audio-player">
+        <audio id="audio-player" controls></audio>
+      </div>
+      <div class="audio-controls">
+        <button id="play-btn" class="audio-btn" type="button" aria-label="Play Audio">▶</button>
+        <button id="pause-btn" class="audio-btn" type="button" aria-label="Pause Audio">⏸</button>
+        <button id="replay-btn" class="audio-btn" type="button" aria-label="Replay Audio">↻</button>
+      </div>
+      <!-- New Extracted Text Container -->
+      <div id="extracted-text-container">
+        <h3>Extracted Text:</h3>
+        <p id="extracted-text"></p>
+      </div>
+      <button id="home-btn" class="btn btn-home" type="button">Return to Home</button>
+    </section>
+
+    <!-- Background Music Management Section -->
+    <section id="background-music-container" role="region" aria-labelledby="bg-music-heading">
+      <h2 id="bg-music-heading">Manage Background Music</h2>
+      <form id="bg-music-form">
+        <label for="bg-music-file">Upload a background music file (.mp3):</label>
+        <input type="file" id="bg-music-file" accept="audio/mp3" aria-label="Select background music file" />
+        <button type="submit" class="btn">Upload Music</button>
+      </form>
+      <button id="list-bg-music-btn" class="btn" type="button">List Available Background Music</button>
+      <div id="bg-music-list" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2025 WarCast AI - Military-style news briefings</p>
+  </footer>
+
+  <script>
+    // DOM element selections
+    const uploadContainer = document.getElementById("upload-container");
+    const processingContainer = document.getElementById("processing-container");
+    const voiceSelectionContainer = document.getElementById("voice-selection-container");
+    const audioPlayerContainer = document.getElementById("audio-player-container");
+    const uploadArea = document.getElementById("upload-area");
+    const fileInput = document.getElementById("file-input");
+    const processingStatus = document.getElementById("processing-status");
+    const imagePreview = document.getElementById("image-preview");
+    const errorContainer = document.getElementById("error-container");
+    const generateAudioBtn = document.getElementById("generate-audio-btn");
+    const audioPlayer = document.getElementById("audio-player");
+    const playBtn = document.getElementById("play-btn");
+    const pauseBtn = document.getElementById("pause-btn");
+    const replayBtn = document.getElementById("replay-btn");
+    const homeBtn = document.getElementById("home-btn");
+    const frequencyVisualizer = document.getElementById("frequency-visualizer");
+    const extractedTextContainer = document.getElementById("extracted-text");
+
+    // Background Music Management elements
+    const bgMusicForm = document.getElementById("bg-music-form");
+    const bgMusicFileInput = document.getElementById("bg-music-file");
+    const bgMusicListContainer = document.getElementById("bg-music-list");
+    const listBgMusicBtn = document.getElementById("list-bg-music-btn");
+
+    // Global variable to hold processed image ID
+    let processedImageId = null;
+
+    // Event Listeners
+    uploadArea.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", handleImageUpload);
+    generateAudioBtn.addEventListener("click", handleVoiceSelection);
+    uploadArea.addEventListener("dragover", handleDragOver);
+    uploadArea.addEventListener("drop", handleDrop);
+    playBtn.addEventListener("click", () => audioPlayer.play());
+    pauseBtn.addEventListener("click", () => audioPlayer.pause());
+    replayBtn.addEventListener("click", () => {
+      audioPlayer.currentTime = 0;
+      audioPlayer.play();
+    });
+    homeBtn.addEventListener("click", resetApp);
+
+    // Drag and Drop Handlers
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadArea.classList.add("drag-over");
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadArea.classList.remove("drag-over");
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fileInput.files = files;
+        handleImageUpload();
+      }
+    }
+
+    // Handle Image Upload
+    async function handleImageUpload() {
+      const file = fileInput.files[0];
+      if (!file) {
+        showError("Please select an image file");
+        return;
+      }
+      if (!file.type.match("image.*")) {
+        showError("Please select a valid image file");
+        return;
+      }
+
+      // Show processing UI and frequency visualizer
+      showSection(processingContainer);
+      frequencyVisualizer.style.display = "flex";
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      try {
+        // Display image preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.src = e.target.result;
+          imagePreview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+
+        // Send image to backend for processing
+        const response = await fetch("/api/process-image", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await response.json();
+        if (data.success) {
+          processedImageId = data.imageId;
+          // Hide frequency visualizer and move to voice selection after a brief delay
+          setTimeout(() => {
+            frequencyVisualizer.style.display = "none";
+            showSection(voiceSelectionContainer);
+          }, 1000);
+        } else {
+          throw new Error(data.message || "Failed to process image");
+        }
+      } catch (error) {
+        showError(error.message || "An error occurred while processing your image");
+        showSection(uploadContainer);
+      }
+    }
+
+    // Handle Voice Selection and Audio Generation
+    async function handleVoiceSelection() {
+      const voice = document.getElementById("voice-select").value;
+      const addBackgroundMusic = document.getElementById("bg-music-checkbox").checked;
+      if (!processedImageId) {
+        showError("No processed image found");
+        return;
+      }
+
+      processingStatus.textContent = "Generating audio briefing...";
+      showSection(processingContainer);
+      frequencyVisualizer.style.display = "flex";
+
+      try {
+        const response = await fetch("/api/generate-audio", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            voice: voice,
+            imageId: processedImageId,
+            addBackgroundMusic: addBackgroundMusic
+          }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          audioPlayer.src = data.audioUrl;
+          // Populate the extracted text container with the Gemini API response
+          extractedTextContainer.innerText = data.extractedText;
+
+          setTimeout(() => {
+            frequencyVisualizer.style.display = "none";
+            showSection(audioPlayerContainer);
+          }, 1000);
+        } else {
+          throw new Error(data.message || "Failed to generate audio");
+        }
+      } catch (error) {
+        showError(error.message || "An error occurred while generating your audio briefing");
+        showSection(voiceSelectionContainer);
+      }
+    }
+
+    // Background Music: Upload handler
+    bgMusicForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const file = bgMusicFileInput.files[0];
+      if (!file) {
+        alert("Please select a music file");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("music", file);
+      
+      try {
+        const response = await fetch("/api/upload-background-music", {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert("Background music uploaded successfully");
+          bgMusicFileInput.value = "";
+        } else {
+          alert("Upload failed: " + (data.message || "Error uploading music"));
+        }
+      } catch (error) {
+        alert("An error occurred: " + error.message);
+      }
+    });
+
+    // Background Music: List available music files
+    listBgMusicBtn.addEventListener("click", async function() {
+      try {
+        const response = await fetch("/api/list-background-music");
+        const data = await response.json();
+        if (data.success) {
+          let listHTML = "<ul>";
+          data.music_files.forEach(function(file) {
+            listHTML += "<li>" + file + "</li>";
+          });
+          listHTML += "</ul>";
+          bgMusicListContainer.innerHTML = listHTML;
+        } else {
+          bgMusicListContainer.innerHTML = "<p>No background music files available.</p>";
+        }
+      } catch (error) {
+        bgMusicListContainer.innerHTML = "<p>Error fetching background music files.</p>";
+      }
+    });
+
+    // Helper function to show specific section while hiding others
+    function showSection(section) {
+      uploadContainer.style.display = "none";
+      processingContainer.style.display = "none";
+      voiceSelectionContainer.style.display = "none";
+      audioPlayerContainer.style.display = "none";
+      section.style.display = "flex";
+    }
+
+    // Display error messages
+    function showError(message) {
+      errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+      setTimeout(() => {
+        errorContainer.innerHTML = "";
+      }, 5000);
+    }
+
+    // Reset application to initial state
+    function resetApp() {
+      showSection(uploadContainer);
+      fileInput.value = "";
+      imagePreview.style.display = "none";
+      imagePreview.src = "";
+      processedImageId = null;
+      audioPlayer.pause();
+      audioPlayer.src = "";
+      frequencyVisualizer.style.display = "none";
+    }
+  </script>
+</body>
+</html>
